@@ -7,11 +7,13 @@
 #include "workchain.fc";
 #include "jetton-utils.fc";
 #include "gas.fc";
+#include "proofs.fc";
 
 {-
   Storage
 
-  Note, status is always equal 0 and unused for now.
+  Status == 0: airdrop not claimed
+         == 1: airdrop is claimed
 
   storage#_ status:uint4
             balance:Coins owner_address:MsgAddressInt
@@ -48,16 +50,25 @@ global int merkle_root;
     int is_from_master = equal_slices_bits(jetton_master_address, sender_address);
     throw_unless(error::not_owner, equal_slices_bits(owner_address, sender_address) | is_from_master);
 
-    balance -= jetton_amount;
-    throw_unless(error::balance_error, balance >= 0);
-
     cell state_init = calculate_jetton_wallet_state_init(to_owner_address, jetton_master_address, my_code(), merkle_root);
     slice to_wallet_address = calculate_jetton_wallet_address(state_init);
     slice response_address = in_msg_body~load_msg_addr();
-    in_msg_body~skip_maybe_ref(); ;; custom_payload
+    cell custom_payload = in_msg_body~load_maybe_ref();
+    ifnot(custom_payload.null?()) {
+        slice cps = custom_payload.begin_parse();
+        int cp_op = cps~load_op();
+        if(cp_op == op::airdrop_claim) {
+            throw_if(error::airdrop_already_claimed, status);
+            cell airdrop_proof = cps~load_ref();
+            balance += get_airdrop_amount(airdrop_proof, merkle_root, owner_address);
+        }
+    }
     int forward_ton_amount = in_msg_body~load_coins();
     check_either_forward_payload(in_msg_body);
     slice either_forward_payload = in_msg_body;
+
+    balance -= jetton_amount;
+    throw_unless(error::balance_error, balance >= 0);
 
     ;; see internal TL-B layout in jetton.tlb
     cell msg_body = begin_cell()

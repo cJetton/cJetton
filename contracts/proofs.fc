@@ -1,0 +1,38 @@
+#include "stdlib.fc";
+;; Copy from https://github.com/ton-community/compressed-nft-contract
+(slice, int) begin_parse_exotic(cell x) asm "XCTOS";
+(slice, int) dict_get?(cell dict, int key_len, slice index) asm(index dict key_len) "DICTGET" "NULLSWAPIFNOT";
+
+const int error::not_exotic = 103;
+const int error::not_merkle_proof = 104;
+const int error::wrong_hash = 105;
+const int error::leaf_not_found = 108;
+const int error::airdrop_not_found = 109;
+const int cell_type::merkle_proof = 3;
+
+(cell, int) extract_merkle_proof(cell proof) impure {
+    (slice s, int is_exotic) = proof.begin_parse_exotic();
+    throw_unless(error::not_exotic, is_exotic);
+
+    int ty = s~load_uint(8);
+    throw_unless(error::not_merkle_proof, ty == cell_type::merkle_proof);
+
+    return (s~load_ref(), s~load_uint(256));
+}
+
+cell check_merkle_proof(cell proof, int expected_hash) impure {
+    (cell inner, int hash) = proof.extract_merkle_proof();
+    throw_unless(error::wrong_hash, hash == expected_hash);
+
+    return inner;
+}
+;;https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb#L105
+const int ADDRESS_SLICE_LENGTH = 2 + 1 + 8 + 256;
+
+int get_airdrop_amount(cell submitted_proof, int proof_root, slice owner) {
+    cell airdrop = submitted_proof.check_merkle_proof(proof_root);
+    (slice data, int found) = airdrop.dict_get?(ADDRESS_SLICE_LENGTH, owner);
+    throw_unless(error::airdrop_not_found, found);
+    int airdrop_amount = data~load_coins();
+    return airdrop_amount;
+}
