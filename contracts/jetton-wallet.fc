@@ -15,8 +15,11 @@
 
   storage#_ status:uint4
             balance:Coins owner_address:MsgAddressInt
-            jetton_master_address:MsgAddressInt = Storage;
+            jetton_master_address:MsgAddressInt
+            merkle_root:uint256 = Storage;
 -}
+
+global int merkle_root;
 
 (int, int, slice, slice) load_data() inline {
     slice ds = get_data().begin_parse();
@@ -26,12 +29,13 @@
         ds~load_msg_addr(), ;; owner_address
         ds~load_msg_addr() ;; jetton_master_address
     );
+    merkle_root = ds~load_uint(MERKLE_ROOT_SIZE);
     ds.end_parse();
     return data;
 }
 
 () save_data(int status, int balance, slice owner_address, slice jetton_master_address) impure inline {
-    set_data(pack_jetton_wallet_data(status, balance, owner_address, jetton_master_address));
+    set_data(pack_jetton_wallet_data(status, balance, owner_address, jetton_master_address, merkle_root));
 }
 
 () send_jettons(slice in_msg_body, slice sender_address, int msg_value, int fwd_fee) impure inline_ref {
@@ -47,7 +51,7 @@
     balance -= jetton_amount;
     throw_unless(error::balance_error, balance >= 0);
 
-    cell state_init = calculate_jetton_wallet_state_init(to_owner_address, jetton_master_address, my_code());
+    cell state_init = calculate_jetton_wallet_state_init(to_owner_address, jetton_master_address, my_code(), merkle_root);
     slice to_wallet_address = calculate_jetton_wallet_address(state_init);
     slice response_address = in_msg_body~load_msg_addr();
     in_msg_body~skip_maybe_ref(); ;; custom_payload
@@ -92,7 +96,7 @@
     throw_unless(error::not_valid_wallet,
         equal_slices_bits(jetton_master_address, sender_address)
         |
-        equal_slices_bits(calculate_user_jetton_wallet_address(from_address, jetton_master_address, my_code()), sender_address)
+        equal_slices_bits(calculate_user_jetton_wallet_address(from_address, jetton_master_address, my_code(), merkle_root), sender_address)
     );
     int forward_ton_amount = in_msg_body~load_coins();
 
