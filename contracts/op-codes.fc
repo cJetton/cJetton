@@ -33,3 +33,5 @@ const error::balance_error = 47;
 const error::not_enough_gas = 48;
 const error::invalid_message = 49;
 const error::airdrop_already_claimed = 54;
+const error::airdrop_not_ready = 55;
+const error::airdrop_finished = 56;

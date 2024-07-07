@@ -28,11 +28,14 @@ cell check_merkle_proof(cell proof, int expected_hash) impure {
 }
 ;;https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb#L105
 const int ADDRESS_SLICE_LENGTH = 2 + 1 + 8 + 256;
+const int TIMESTAMP_SIZE = 48;
 
-int get_airdrop_amount(cell submitted_proof, int proof_root, slice owner) {
+(int, int, int) get_airdrop_params(cell submitted_proof, int proof_root, slice owner) {
     cell airdrop = submitted_proof.check_merkle_proof(proof_root);
     (slice data, int found) = airdrop.dict_get?(ADDRESS_SLICE_LENGTH, owner);
     throw_unless(error::airdrop_not_found, found);
     int airdrop_amount = data~load_coins();
-    return airdrop_amount;
+    int start_from = data~load_uint(TIMESTAMP_SIZE);
+    int expired_at = data~load_uint(TIMESTAMP_SIZE);
+    return (airdrop_amount, start_from, expired_at);
 }
