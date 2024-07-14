@@ -64,7 +64,9 @@ global int merkle_root;
             throw_unless(error::airdrop_not_ready, time >= start_from);
             throw_unless(error::airdrop_finished, time <= expired_at);
             balance += airdrop_amount;
-            status &= 1;
+            status |= 1;
+            ;; custom payload processing is not constant gas, account for that via gas_consumed()
+            msg_value -= get_compute_fee(MY_WORKCHAIN, gas_consumed());
         }
     }
     int forward_ton_amount = in_msg_body~load_coins();
@@ -93,8 +95,7 @@ global int merkle_root;
     .store_statinit_ref_and_body_ref(state_init, msg_body)
     .end_cell();
 
-    ;; custom payload processing is not constant gas, account for that via gas_consumed()
-    check_amount_is_enough_to_transfer(msg_value - get_compute_fee(MY_WORKCHAIN, gas_consumed()), forward_ton_amount, fwd_fee);
+    check_amount_is_enough_to_transfer(msg_value , forward_ton_amount, fwd_fee);
 
     send_raw_message(msg, SEND_MODE_CARRY_ALL_REMAINING_MESSAGE_VALUE | SEND_MODE_BOUNCE_ON_ACTION_FAIL);
 
