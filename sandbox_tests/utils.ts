@@ -30,6 +30,10 @@ export const getRandomTon = (min:number, max:number): bigint => {
     return toNano(getRandom(min, max).toFixed(9));
 }
 
+export const buff2bigint = (buff: Buffer) : bigint => {
+    return BigInt("0x" + buff.toString("hex"));
+}
+
 export type InternalTransfer = {
     from: Address | null,
     response: Address | null,
