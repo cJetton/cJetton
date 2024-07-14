@@ -26,7 +26,7 @@ const op::claim_admin = 0xfb88e119;
 const op::upgrade = 0x2508d66a;
 const op::change_metadata_uri = 0xcb862902;
 const op::drop_admin = 0x7431f221;
-const op::airdrop_claim = 0x44ff; ;; TODO
+const op::merkle_airdrop_claim = 0x44ff; ;; TODO
 
 ;; jetton-wallet
 const error::balance_error = 47;

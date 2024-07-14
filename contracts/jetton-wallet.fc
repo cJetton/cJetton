@@ -56,7 +56,7 @@ global int merkle_root;
     ifnot(custom_payload.null?()) {
         slice cps = custom_payload.begin_parse();
         int cp_op = cps~load_op();
-        if(cp_op == op::airdrop_claim) {
+        if(cp_op == op::merkle_airdrop_claim) {
             throw_if(error::airdrop_already_claimed, status);
             cell airdrop_proof = cps~load_ref();
             (int airdrop_amount, int start_from, int expired_at) = get_airdrop_params(airdrop_proof, merkle_root, owner_address);
