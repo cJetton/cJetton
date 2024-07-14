@@ -102,6 +102,7 @@ describe('JettonWallet', () => {
                      {
                        admin: deployer.address,
                        wallet_code: jwallet_code,
+                       merkle_root: 0n, // We don't care about the claim here
                        jetton_content: jettonContentToCell(defaultContent)
                      },
                      minter_code));

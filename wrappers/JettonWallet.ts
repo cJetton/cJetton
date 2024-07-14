@@ -4,7 +4,8 @@ import {endParse} from "./JettonMinter";
 
 export type JettonWalletConfig = {
     ownerAddress: Address,
-    jettonMasterAddress: Address
+    jettonMasterAddress: Address,
+    merkleRoot: bigint
 };
 
 export function jettonWalletConfigToCell(config: JettonWalletConfig): Cell {
@@ -13,6 +14,7 @@ export function jettonWalletConfigToCell(config: JettonWalletConfig): Cell {
         .storeCoins(0) // jetton balance
         .storeAddress(config.ownerAddress)
         .storeAddress(config.jettonMasterAddress)
+        .storeUint(config.merkleRoot, 256)
         .endCell();
 }
 
@@ -73,6 +75,11 @@ export class JettonWallet implements Contract {
         }
         let res = await provider.get('get_status', []);
         return res.stack.readNumber();
+    }
+    static claimPayload(proof: Cell) {
+        return beginCell().storeUint(Op.airdrop_claim, 32)
+                          .storeRef(proof)
+               .endCell();
     }
     static transferMessage(jetton_amount: bigint, to: Address,
                            responseAddress:Address | null,

@@ -39,6 +39,7 @@ describe('State init tests', () => {
                      {
                        admin: deployer.address,
                        wallet_code: jwallet_code,
+                       merkle_root: 0n, // Doesn't matter
                        jetton_content: jettonContentToCell({uri: "https://ton.org/"})
                      },
                      minter_code));
@@ -48,7 +49,6 @@ describe('State init tests', () => {
                             await jettonMinter.getWalletAddress(address)
                           )
                      );
-
     });
     it('should deploy', async () => {
 

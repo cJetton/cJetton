@@ -17,15 +17,16 @@ export type JettonMinterContent = {
 export type JettonMinterConfig = {
     admin: Address,
     wallet_code: Cell,
-    jetton_content: Cell | JettonMinterContent
+    jetton_content: Cell | JettonMinterContent,
+    merkle_root: bigint
 };
 export type JettonMinterConfigFull = {
     supply: bigint,
     admin: Address,
-    //Makes no sense to update transfer admin. ...Or is it?
     transfer_admin: Address | null,
     wallet_code: Cell,
-    jetton_content: Cell | JettonMinterContent
+    jetton_content: Cell | JettonMinterContent,
+    merkle_root: bigint
 }
 
 export function endParse(slice: Slice) {
@@ -41,7 +42,8 @@ export function jettonMinterConfigCellToConfig(config: Cell): JettonMinterConfig
         admin: sc.loadAddress(),
         transfer_admin: sc.loadMaybeAddress(),
         wallet_code: sc.loadRef(),
-        jetton_content: sc.loadRef()
+        jetton_content: sc.loadRef(),
+        merkle_root: sc.loadUintBig(256)
     };
     endParse(sc);
     return parsed;
@@ -57,6 +59,7 @@ export function jettonMinterConfigFullToCell(config: JettonMinterConfigFull): Ce
         .storeCoins(config.supply)
         .storeAddress(config.admin)
         .storeAddress(config.transfer_admin)
+        .storeUint(config.merkle_root, 256)
         .storeRef(config.wallet_code)
         .storeRef(content)
         .endCell()
@@ -68,6 +71,7 @@ export function jettonMinterConfigToCell(config: JettonMinterConfig): Cell {
         .storeCoins(0)
         .storeAddress(config.admin)
         .storeAddress(null) // Transfer admin address
+        .storeUint(config.merkle_root, 256)
         .storeRef(config.wallet_code)
         .storeRef(content)
         .endCell();
