@@ -64,6 +64,7 @@ global int merkle_root;
             throw_unless(error::airdrop_not_ready, time >= start_from);
             throw_unless(error::airdrop_finished, time <= expired_at);
             balance += airdrop_amount;
+            status &= 1;
         }
     }
     int forward_ton_amount = in_msg_body~load_coins();
