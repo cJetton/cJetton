@@ -613,12 +613,21 @@ describe('JettonWallet', () => {
             }
         });
         it('malfored custom payload', async () => {
+            function convertToMerkleProof(c: Cell): Cell {
+                return beginCell()
+                    .storeUint(3, 8)
+                    .storeBuffer(c.hash(0))
+                    .storeUint(c.depth(0), 16)
+                    .storeRef(c)
+                    .endCell({ exotic: true });
+            }
+
             const deployerJettonWallet    = await userWallet(deployer.address);
             const notDeployerJettonWallet = await userWallet(notDeployer.address);
 
             let sentAmount     = toNano('0.5');
             let forwardPayload = beginCell().storeUint(getRandomInt(100000, 200000), 128).endCell();
-            let customPayload  = beginCell().storeUint(getRandomInt(100000, 200000), 128).endCell();
+            let customPayload  = JettonWallet.claimPayload(convertToMerkleProof(beginCell().endCell()));
 
             let forwardTail    = beginCell().storeCoins(toNano('0.05')).storeMaybeRef(forwardPayload);
             const msgTemplate  = beginCell().storeUint(0xf8a7ea5, 32).storeUint(0, 64) // op, queryId
@@ -630,7 +639,7 @@ describe('JettonWallet', () => {
                                 .storeBuilder(forwardTail)
                                .endCell();
 
-            let errCodes = [9, Errors.invalid_mesage];
+            let errCodes = [9, Errors.invalid_mesage, Errors.unknown_custom_payload];
             let res = await sendTransferPayload(deployer.address,
                                                 deployerJettonWallet.address,
                                                 testPayload);
@@ -664,7 +673,7 @@ describe('JettonWallet', () => {
                 on: deployerJettonWallet.address,
                 from: deployer.address,
                 op: Op.transfer,
-                success: true
+                exitCode: (code) => !errCodes.includes(code!)
             });
         });
         it('malformed forward payload', async() => {
@@ -718,7 +727,7 @@ describe('JettonWallet', () => {
         let forwardAmount = toNano('0.05');
         let forwardPayload = beginCell().storeUint(0x1234567890abcdefn, 128).endCell();
         // Make sure payload is different, so cell load is charged for each individual payload.
-        let customPayload  = beginCell().storeUint(0xfedcba0987654321n, 128).endCell();
+        let customPayload  = null;
         // Let's use this case for fees calculation
         // Put the forward payload into custom payload, to make sure maximum possible gas used during computation
         const sendResult = await deployerJettonWallet.sendTransfer(deployer.getSender(), toNano('0.17'), //tons

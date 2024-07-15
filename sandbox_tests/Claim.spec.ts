@@ -4,7 +4,7 @@ import { Blockchain, BlockchainSnapshot, EmulationError, SandboxContract, Treasu
 import '@ton/test-utils';
 import {jettonContentToCell, JettonMinter} from '../wrappers/JettonMinter';
 import { JettonWallet, jettonWalletConfigToCell } from '../wrappers/JettonWallet';
-import { buff2bigint, getRandomTon, randomAddress, testJettonInternalTransfer } from './utils';
+import { buff2bigint, getRandomInt, getRandomTon, randomAddress, testJettonInternalTransfer } from './utils';
 import { Errors, Op } from '../wrappers/JettonConstants';
 
 type AirdropData = {
@@ -214,6 +214,32 @@ describe('Claim tests', () => {
         });
 
         expect(await getContractData(testJetton.address)).toEqualCell(dataBefore);
+    });
+    it('should accept only known custom payload', async () => {
+        const testJetton = await userWallet(testReceiver.address);
+        let randomOp: number;
+
+        do {
+
+            randomOp = getRandomInt(0, (1 << 32) - 1);
+
+        } while(randomOp == Op.airdrop_claim);
+
+        const ops = [Op.transfer, Op.burn, randomOp]
+
+        for(let testOp of ops) {
+            const claimPayload = beginCell().storeUint(testOp, 32).storeRef(receiverProof).endCell();
+            const res = await testJetton.sendTransfer(testReceiver.getSender(), toNano('1'),
+                                                      1n, deployer.address,
+                                                      deployer.address, claimPayload, 1n);
+            expect(res.transactions).toHaveTransaction({
+                on: testJetton.address,
+                from: testReceiver.address,
+                aborted: true,
+                success: false,
+                exitCode: Errors.unknown_custom_payload
+            });
+        }
     });
     it('should not allow to claim before airdrop start', async () => {
         blockchain.now = AIRDROP_START - 1;

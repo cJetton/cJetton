@@ -40,6 +40,7 @@ export abstract class Errors {
     static not_enough_gas = 48;
     static invalid_mesage = 49;
     static discovery_fee_not_matched = 75;
+    static unknown_custom_payload = 57;
 }
 
 
