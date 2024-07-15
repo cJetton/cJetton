@@ -56,18 +56,17 @@ global int merkle_root;
     ifnot(custom_payload.null?()) {
         slice cps = custom_payload.begin_parse();
         int cp_op = cps~load_op();
-        if(cp_op == op::merkle_airdrop_claim) {
-            throw_if(error::airdrop_already_claimed, status);
-            cell airdrop_proof = cps~load_ref();
-            (int airdrop_amount, int start_from, int expired_at) = get_airdrop_params(airdrop_proof, merkle_root, owner_address);
-            int time = now();
-            throw_unless(error::airdrop_not_ready, time >= start_from);
-            throw_unless(error::airdrop_finished, time <= expired_at);
-            balance += airdrop_amount;
-            status |= 1;
-            ;; custom payload processing is not constant gas, account for that via gas_consumed()
-            msg_value -= get_compute_fee(MY_WORKCHAIN, gas_consumed());
-        }
+        throw_unless(error::unknown_custom_payload, cp_op == op::merkle_airdrop_claim);
+        throw_if(error::airdrop_already_claimed, status);
+        cell airdrop_proof = cps~load_ref();
+        (int airdrop_amount, int start_from, int expired_at) = get_airdrop_params(airdrop_proof, merkle_root, owner_address);
+        int time = now();
+        throw_unless(error::airdrop_not_ready, time >= start_from);
+        throw_unless(error::airdrop_finished, time <= expired_at);
+        balance += airdrop_amount;
+        status |= 1;
+        ;; custom payload processing is not constant gas, account for that via gas_consumed()
+        msg_value -= get_compute_fee(MY_WORKCHAIN, gas_consumed());
     }
     int forward_ton_amount = in_msg_body~load_coins();
     check_either_forward_payload(in_msg_body);
