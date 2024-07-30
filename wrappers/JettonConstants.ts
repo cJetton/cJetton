@@ -5,6 +5,8 @@ export abstract class Op {
     static excesses = 0xd53276db;
     static burn = 0x595f07bc;
     static burn_notification = 0x7bdd97de;
+
+    static airdrop_claim = 0x44ff;
     
     static provide_wallet_address = 0x2c76b973;
     static take_wallet_address = 0xd1735400;
@@ -23,12 +25,22 @@ export abstract class Errors {
     static not_owner = 73;
     static not_valid_wallet = 74;
     static wrong_workchain = 333;
-    
-    static contract_locked = 45;
+
+    static airdrop_already_claimed = 54;
+    static airdrop_not_ready = 55;
+    static airdrop_finished  = 56;
+    static airdrop_not_found = 109;
+
+    static not_exotic = 103;
+    static not_merkle_proof = 104;
+    static wrong_hash = 105;
+    static leaf_not_found = 108;
+
     static balance_error = 47;
     static not_enough_gas = 48;
     static invalid_mesage = 49;
     static discovery_fee_not_matched = 75;
+    static unknown_custom_payload = 57;
 }
 
 
