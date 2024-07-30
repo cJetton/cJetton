@@ -252,3 +252,8 @@ int get_status() method_id {
     (int status, _, _, _) = load_data();
     return status;
 }
+
+int is_claimed() method_id {
+    (int status, _, _, _) = load_data();
+    return status;
+}
