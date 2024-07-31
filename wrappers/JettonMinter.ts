@@ -97,6 +97,12 @@ export class JettonMinter implements Contract {
         return new JettonMinter(contractAddress(workchain, init), init);
     }
 
+    static createFromFullConfig(config: JettonMinterConfigFull, code: Cell, workchain = 0) {
+        const data = jettonMinterConfigFullToCell(config);
+        const init = {code, data};
+        return new JettonMinter(contractAddress(workchain, init), init);
+    }
+
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
         await provider.internal(via, {
             value,
