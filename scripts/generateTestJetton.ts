@@ -67,6 +67,7 @@ function convertToPrunedBranch(c: Cell): Cell {
 export async function generateWalletsWithAirdropData() {
     const allWallets = [];
     let workchain = 0;
+    let totalSupply = 0n;
     let airdropData = Dictionary.empty(Dictionary.Keys.Address(), airDropValue);
     for (let pack = 0; pack < P; pack++) {
         let wallets = [];
@@ -76,6 +77,7 @@ export async function generateWalletsWithAirdropData() {
             let wallet = WalletContractV3R2.create({ workchain, publicKey: keyPair.publicKey });
             //generate airdrop data
             let amount = toNano((Math.ceil(Math.random()*22) + 1).toString());
+            totalSupply += amount;
             let start_from = AIRDROP_START;
             let expire_at = Math.ceil(AIRDROP_START + (AIRDROP_END - AIRDROP_START) * (i + 1) / N);
             airdropData.set(wallet.address, {amount, start_from, expire_at });
@@ -87,6 +89,7 @@ export async function generateWalletsWithAirdropData() {
             let wallet = WalletContractV4.create({ workchain, publicKey: keyPair.publicKey });
             //generate airdrop data
             let amount = toNano((Math.ceil(Math.random()*22) + 1).toString());
+            totalSupply += amount;
             let start_from = AIRDROP_START;
             let expire_at = Math.ceil(AIRDROP_START + (AIRDROP_END - AIRDROP_START) * (i + 1) / N);
             airdropData.set(wallet.address, {amount, start_from, expire_at });
@@ -98,6 +101,7 @@ export async function generateWalletsWithAirdropData() {
             let wallet = WalletContractV5R1.create({ publicKey: keyPair.publicKey, walletId: { networkGlobalId: -3 } });
             //generate airdrop data
             let amount = toNano((Math.ceil(Math.random()*22) + 1).toString());
+            totalSupply += amount;
             let start_from = AIRDROP_START;
             let expire_at = Math.ceil(AIRDROP_START + (AIRDROP_END - AIRDROP_START) * (i + 1) / N);
             airdropData.set(wallet.address, {amount, start_from, expire_at });
@@ -139,7 +143,12 @@ export async function generateWalletsWithAirdropData() {
         fs.writeFileSync(`wallets${pack}.csv`, csv);
     }
 
-    return {merkleRoot, allWallets, airdropData};
+    // store serialized airdropCell to file as buffer
+    let serializedAirdropCell = airdropCell.toBoc();
+    fs.writeFileSync("airdropData.boc", serializedAirdropCell);
+
+
+    return {merkleRoot, allWallets, airdropData, totalSupply};
 }
 
 
@@ -159,10 +168,12 @@ export async function run(provider: NetworkProvider) {
 
     let wallet_code = await compile('JettonWallet');
     let minter_code = await compile('JettonMinter');
-    let minterContract = JettonMinter.createFromConfig({admin: adminAddress.address,
+    let minterContract = JettonMinter.createFromFullConfig({admin: adminAddress.address,
                                                         wallet_code:wallet_code,
                                                         merkle_root: merkleRoot,
                                                         jetton_content: jettonContentToCell({uri: jettonMetadataUri}),
+                                                        supply: data.totalSupply,
+                                                        transfer_admin: null,
                                                         }, minter_code);
     let minter = provider.open(minterContract);
     await minter.sendDeploy(provider.sender(), toNano("1.5"));
