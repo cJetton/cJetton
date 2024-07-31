@@ -166,7 +166,8 @@ export async function run(provider: NetworkProvider) {
     let merkleRoot = data.merkleRoot;
     let allWallets = data.allWallets;
 
-    let wallet_code = await compile('JettonWallet');
+    let wallet_code_raw = await compile('JettonWallet');
+    const wallet_code = jettonWalletCodeFromLibrary(wallet_code_raw);
     let minter_code = await compile('JettonMinter');
     let minterContract = JettonMinter.createFromFullConfig({admin: adminAddress.address,
                                                         wallet_code:wallet_code,
@@ -178,6 +179,8 @@ export async function run(provider: NetworkProvider) {
     let minter = provider.open(minterContract);
     await minter.sendDeploy(provider.sender(), toNano("1.5"));
     console.log("Minter deployed at address: ", minter.address.toString());
+    // save minter address to file minter.json
+    fs.writeFileSync("minter.json", JSON.stringify({address: minter.address.toString()}));
 
     // now lets send 1 TON to first wallet of first package
     let mnemonic = allWallets[0][0][0] as string[];
