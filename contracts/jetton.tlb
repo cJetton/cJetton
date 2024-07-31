@@ -1,4 +1,4 @@
-//=======================================================================
+hhhhhhhhhhhhhhhhhhhhhhhh//=======================================================================
 // BASIC
 // https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb
 
@@ -128,7 +128,7 @@ change_admin#6501f354
   new_admin_address:MsgAddress
   = JettonMinterMsg;
 
-drop_admin#0x7431f221
+drop_admin#7431f221
   query_id:uint64
   = DropAdminMsg;
 
@@ -146,3 +146,6 @@ change_metadata_uri#cb862902
   query_id:uint64
   metadata:Cell
   = JettonMinterMsg;
+
+// Custom Payload format
+merkle_airdrop_claim#0df602d6 proof:^Cell = CustomPayload;

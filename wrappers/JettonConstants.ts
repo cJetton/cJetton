@@ -6,7 +6,7 @@ export abstract class Op {
     static burn = 0x595f07bc;
     static burn_notification = 0x7bdd97de;
 
-    static airdrop_claim = 0x44ff;
+    static airdrop_claim = 0x0df602d6;
     
     static provide_wallet_address = 0x2c76b973;
     static take_wallet_address = 0xd1735400;
